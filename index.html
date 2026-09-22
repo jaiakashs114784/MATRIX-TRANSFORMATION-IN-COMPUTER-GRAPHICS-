@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrix Transformations in Robotics</title>
+<style>
+  :root{
+    --bg:#05060f;
+    --bg2:#0a0d1f;
+    --neon-blue:#00d4ff;
+    --neon-purple:#a855f7;
+    --neon-pink:#f472b6;
+    --text:#e6ecff;
+    --dim:#8b93b8;
+    --line:rgba(0,212,255,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--text);}
+  body{
+    background:
+      radial-gradient(1200px 700px at 85% 15%, rgba(168,85,247,.14), transparent 60%),
+      radial-gradient(1000px 700px at 10% 90%, rgba(0,212,255,.12), transparent 60%),
+      var(--bg);
+  }
+  /* grid overlay */
+  .grid{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+    background-image:linear-gradient(rgba(0,212,255,.06) 1px, transparent 1px),
+                     linear-gradient(90deg, rgba(0,212,255,.06) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(circle at 50% 50%, black 30%, transparent 85%);
+  }
+  .deck{position:relative;z-index:1;height:100vh;}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:6vh 8vw;opacity:0;transform:translateX(60px) scale(.98);pointer-events:none;
+    transition:opacity .55s ease, transform .55s cubic-bezier(.22,1,.36,1);
+  }
+  .slide.active{opacity:1;transform:none;pointer-events:auto;}
+  .slide.exit-left{transform:translateX(-60px) scale(.98);}
+
+  .kicker{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:clamp(11px,1.1vw,14px);letter-spacing:.35em;text-transform:uppercase;
+    color:var(--neon-blue);margin-bottom:2.2vh;
+  }
+  .kicker::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--neon-blue));}
+  .kicker .idx{color:var(--neon-purple);letter-spacing:.15em;}
+  h1.title{
+    font-size:clamp(34px,5.2vw,72px);line-height:1.05;font-weight:800;letter-spacing:-.01em;
+    background:linear-gradient(100deg,#fff 20%,var(--neon-blue) 55%,var(--neon-purple) 90%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    margin-bottom:3vh;
+  }
+  h2{
+    font-size:clamp(26px,3.4vw,48px);font-weight:700;margin-bottom:3.5vh;line-height:1.1;
+  }
+  h2 .hl{color:var(--neon-blue);}
+  h2 .hl2{color:var(--neon-purple);}
+  ul.points{list-style:none;display:flex;flex-direction:column;gap:2vh;max-width:60vw;}
+  ul.points li{
+    position:relative;padding-left:34px;font-size:clamp(15px,1.5vw,22px);line-height:1.45;color:var(--text);
+    opacity:0;transform:translateY(14px);transition:opacity .5s ease, transform .5s ease;
+  }
+  .slide.active ul.points li{opacity:1;transform:none;}
+  .slide.active ul.points li:nth-child(1){transition-delay:.15s}
+  .slide.active ul.points li:nth-child(2){transition-delay:.28s}
+  .slide.active ul.points li:nth-child(3){transition-delay:.41s}
+  .slide.active ul.points li:nth-child(4){transition-delay:.54s}
+  .slide.active ul.points li:nth-child(5){transition-delay:.67s}
+  ul.points li::before{
+    content:"";position:absolute;left:0;top:.55em;width:14px;height:14px;
+    border:2px solid var(--neon-blue);transform:rotate(45deg);
+    box-shadow:0 0 12px rgba(0,212,255,.6);
+  }
+  ul.points li b{color:var(--neon-blue);font-weight:600;}
+  ul.points li i{color:var(--neon-purple);font-style:normal;}
+
+  .panel{
+    border:1px solid var(--line);border-radius:14px;padding:3vh 2.4vw;
+    background:linear-gradient(160deg,rgba(0,212,255,.06),rgba(168,85,247,.05));
+    backdrop-filter:blur(4px);
+    box-shadow:0 0 40px rgba(0,212,255,.08) inset, 0 10px 40px rgba(0,0,0,.4);
+  }
+  .split{display:grid;grid-template-columns:1.15fr .85fr;gap:4vw;align-items:center;}
+  .viz{display:flex;align-items:center;justify-content:center;}
+  svg{max-width:100%;height:auto;filter:drop-shadow(0 0 18px rgba(0,212,255,.25));}
+
+  .names{display:flex;gap:1.4vw;flex-wrap:wrap;margin-top:2vh;}
+  .chip{
+    padding:10px 22px;border:1px solid var(--line);border-radius:999px;
+    font-size:clamp(13px,1.2vw,17px);color:var(--text);letter-spacing:.05em;
+    background:rgba(0,212,255,.05);
+    box-shadow:0 0 20px rgba(0,212,255,.12) inset;
+  }
+  .tagline{color:var(--dim);font-size:clamp(14px,1.4vw,20px);letter-spacing:.12em;text-transform:uppercase;}
+
+  .footer{
+    position:fixed;bottom:2.4vh;left:8vw;right:8vw;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:12px;letter-spacing:.25em;color:var(--dim);text-transform:uppercase;
+  }
+  .progress{position:fixed;top:0;left:0;height:3px;width:0%;z-index:6;
+    background:linear-gradient(90deg,var(--neon-blue),var(--neon-purple));
+    box-shadow:0 0 12px var(--neon-blue);transition:width .5s ease;}
+  .counter{position:fixed;top:2.4vh;right:4vw;z-index:6;font-size:13px;letter-spacing:.3em;color:var(--neon-blue);}
+  .hint{position:fixed;bottom:2.4vh;right:8vw;z-index:6;font-size:11px;letter-spacing:.2em;color:var(--dim);}
+
+  .matrix{font-family:'Consolas','SF Mono',monospace;font-size:clamp(16px,1.8vw,26px);line-height:1.8;
+    color:var(--neon-blue);text-shadow:0 0 14px rgba(0,212,255,.5);}
+  .matrix .p{color:var(--neon-purple);}
+  .matrix .w{color:#fff;}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  @keyframes dash{to{stroke-dashoffset:-40}}
+  .flow{stroke-dasharray:6 8;animation:dash 1.2s linear infinite;}
+  .glowdot{animation:pulse 2s ease-in-out infinite;}
+  .robot-arm{transform-origin:80px 130px;animation:armwave 3.2s ease-in-out infinite;}
+  @keyframes armwave{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+
+  @media(max-width:820px){
+    .split{grid-template-columns:1fr;}
+    ul.points{max-width:100%;}
+    .viz{display:none;}
+  }
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="grid"></div>
+<div class="progress" id="prog"></div>
+<div class="counter" id="counter">01 / 15</div>
+
+<div class="deck" id="deck">
+
+<!-- 1 TITLE -->
+<section class="slide">
+  <div class="kicker"><span class="idx">SYS.BOOT</span> ROBOTICS LECTURE SERIES</div>
+  <h1 class="title">Matrix Transformations<br>in Robotics</h1>
+  <p class="tagline">The mathematics that makes machines move</p>
+  <div class="names">
+    <span class="chip">Jai Akash</span><span class="chip">Sudhershen</span>
+    <span class="chip">Gautham</span><span class="chip">Saanjeev</span>
+    <span class="chip">Nithin Nivas</span>
+  </div>
+</section>
+
+<!-- 2 HOOK -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">02</span> THE HOOK</div>
+      <h2>How do robots <span class="hl">actually move?</span></h2>
+      <ul class="points">
+        <li>A robot arm has no "muscles" or "eyes" — only <b>numbers</b>.</li>
+        <li>Every joint, every motor, every gripper position is a <b>mathematical command</b>.</li>
+        <li>Behind every smooth factory robot is a constant stream of <b>matrix calculations</b>.</li>
+        <li>Today: how a grid of numbers becomes <i>physical motion</i>.</li>
+      </ul>
+    </div>
+    <div class="viz">
+      <svg width="360" height="360" viewBox="0 0 360 360">
+        <defs><linearGradient id="g1" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#00d4ff"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+        <circle cx="180" cy="180" r="150" fill="none" stroke="rgba(0,212,255,.15)"/>
+        <circle cx="180" cy="180" r="110" fill="none" stroke="rgba(168,85,247,.2)" stroke-dasharray="4 10"/>
+        <g class="robot-arm">
+          <rect x="160" y="150" width="40" height="90" rx="8" fill="url(#g1)" opacity=".9"/>
+          <circle cx="180" cy="150" r="22" fill="#0a0d1f" stroke="#00d4ff" stroke-width="2"/>
+          <rect x="168" y="80" width="24" height="80" rx="6" fill="url(#g1)" opacity=".7" transform="rotate(35 180 150)"/>
+        </g>
+        <circle class="glowdot" cx="180" cy="150" r="6" fill="#00d4ff"/>
+        <text x="180" y="330" fill="#8b93b8" font-size="13" text-anchor="middle" letter-spacing="4">ROBOT ONLINE</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 3 PROBLEM -->
+<section class="slide">
+  <div class="kicker"><span class="idx">03</span> THE PROBLEM</div>
+  <h2>Understanding robot <span class="hl2">motion</span> is hard</h2>
+  <ul class="points">
+    <li>A robot has many joints moving <b>at the same time</b> — how do we describe that?</li>
+    <li>Saying "move left a bit, then up" doesn't scale to <b>6-axis industrial arms</b>.</li>
+    <li>We need one language that handles <b>position + orientation</b> together.</li>
+    <li>That language is <i>transformation matrices</i> — compact, exact, and composable.</li>
+  </ul>
+</section>
+
+<!-- 4 COORDINATES -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">04</span> FOUNDATION</div>
+      <h2>Coordinate systems: <span class="hl">X, Y, Z</span></h2>
+      <ul class="points">
+        <li>Everything a robot does is described relative to a <b>coordinate frame</b>.</li>
+        <li><b>X</b> → forward/back, <b>Y</b> → left/right, <b>Z</b> → up/down.</li>
+        <li>Each robot joint gets its <b>own frame</b> — the gripper has one, the base has one.</li>
+        <li>Motion = describing how points move <i>from one frame to another</i>.</li>
+      </ul>
+    </div>
+    <div class="viz">
+      <svg width="360" height="360" viewBox="0 0 360 360">
+        <line x1="40" y1="300" x2="330" y2="300" stroke="#00d4ff" stroke-width="3" marker-end="url(#aX)"/>
+        <line x1="180" y1="300" x2="180" y2="60" stroke="#a855f7" stroke-width="3"/>
+        <line x1="180" y1="300" x2="70" y2="210" stroke="#f472b6" stroke-width="3"/>
+        <defs>
+          <marker id="aX" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L9,3 L0,6 Z" fill="#00d4ff"/></marker>
+          <marker id="aZ" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L9,3 L0,6 Z" fill="#a855f7"/></marker>
+          <marker id="aY" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L9,3 L0,6 Z" fill="#f472b6"/></marker>
+        </defs>
+        <line x1="180" y1="300" x2="180" y2="60" stroke="#a855f7" stroke-width="3" marker-end="url(#aZ)" transform="translate(0,0)"/>
+        <line x1="180" y1="300" x2="70" y2="210" stroke="#f472b7" stroke-width="0"/>
+        <text x="336" y="306" fill="#00d4ff" font-size="20" font-weight="bold">X</text>
+        <text x="172" y="50" fill="#a855f7" font-size="20" font-weight="bold">Z</text>
+        <text x="52" y="198" fill="#f472b6" font-size="20" font-weight="bold">Y</text>
+        <circle cx="180" cy="300" r="7" fill="#fff"/>
+        <text x="196" y="318" fill="#8b93b8" font-size="13">origin (0,0,0)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 5 WHAT IS A MATRIX -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">05</span> CORE CONCEPT</div>
+      <h2>What is a <span class="hl">matrix</span>?</h2>
+      <ul class="points">
+        <li>A matrix is just a <b>grid of numbers</b> arranged in rows and columns.</li>
+        <li>Think of it as a <b>recipe of instructions</b> for moving points in space.</li>
+        <li>Change the numbers → change the <i>type of motion</i> the robot performs.</li>
+        <li>Robots store entire poses as small matrices — <b>easy to compute, fast to chain</b>.</li>
+      </ul>
+    </div>
+    <div class="viz panel" style="text-align:center;">
+      <div class="matrix">
+        [ <span class="w">a</span> <span class="p">b</span> &nbsp;<span class="w">c</span> ]<br>
+        [ <span class="p">d</span> <span class="w">e</span> &nbsp;<span class="p">f</span> ]<br>
+        [ <span class="w">0</span> <span class="p">0</span> &nbsp;<span class="w">1</span> ]
+      </div>
+      <p style="color:var(--dim);margin-top:2vh;font-size:14px;letter-spacing:.15em;">ONE MATRIX = ONE FULL MOTION COMMAND</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 TYPES -->
+<section class="slide">
+  <div class="kicker"><span class="idx">06</span> THE TOOLKIT</div>
+  <h2>Types of <span class="hl2">transformations</span></h2>
+  <ul class="points">
+    <li><b>Translation</b> — slide an object from one place to another.</li>
+    <li><b>Rotation</b> — turn an object around an axis.</li>
+    <li><b>Scaling</b> — grow or shrink an object.</li>
+    <li>All three are just <i>different number patterns</i> inside the same matrix format.</li>
+  </ul>
+</section>
+
+<!-- 7 TRANSLATION -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">07</span> TRANSFORMATION 01</div>
+      <h2>Translation — <span class="hl">movement</span></h2>
+      <ul class="points">
+        <li>Translation means <b>sliding</b> an object without turning it.</li>
+        <li>Only the last column changes: it stores "<b>how far</b>" in X, Y, Z.</li>
+        <li>Robot use-case: moving a gripper <i>straight to a part</i> on a conveyor.</li>
+        <li>Think: "walk 3 steps east, 2 steps north" — that's a translation vector.</li>
+      </ul>
+    </div>
+    <div class="viz">
+      <svg width="380" height="300" viewBox="0 0 380 300">
+        <g stroke="rgba(0,212,255,.15)"><line x1="0" y1="75" x2="380" y2="75"/><line x1="0" y1="150" x2="380" y2="150"/><line x1="0" y1="225" x2="380" y2="225"/>
+        <line x1="95" y1="0" x2="95" y2="300"/><line x1="190" y1="0" x2="190" y2="300"/><line x1="285" y1="0" x2="285" y2="300"/></g>
+        <rect x="70" y="170" width="50" height="50" rx="6" fill="rgba(168,85,247,.25)" stroke="#a855f7"/>
+        <rect x="240" y="80" width="50" height="50" rx="6" fill="rgba(0,212,255,.3)" stroke="#00d4ff"/>
+        <line class="flow" x1="125" y1="190" x2="235" y2="105" stroke="#00d4ff" stroke-width="2"/>
+        <text x="150" y="230" fill="#a855f7" font-size="13">start</text>
+        <text x="248" y="70" fill="#00d4ff" font-size="13">end</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 8 ROTATION -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">08</span> TRANSFORMATION 02</div>
+      <h2>Rotation — <span class="hl">turning</span></h2>
+      <ul class="points">
+        <li>Rotation turns an object around an <b>axis</b> (X, Y, or Z).</li>
+        <li>The 3×3 corner of the matrix stores <i>how much to turn</i> — using sin/cos angles.</li>
+        <li>Robot use-case: a wrist joint <b>twisting the gripper</b> to align with a part.</li>
+        <li>Key idea: rotating the <b>coordinate frame</b> = same math as rotating the object.</li>
+      </ul>
+    </div>
+    <div class="viz">
+      <svg width="340" height="340" viewBox="0 0 340 340">
+        <circle cx="170" cy="170" r="120" fill="none" stroke="rgba(0,212,255,.2)"/>
+        <line x1="170" y1="170" x2="290" y2="170" stroke="rgba(168,85,247,.4)" stroke-width="2"/>
+        <line x1="170" y1="170" x2="255" y2="90" stroke="#00d4ff" stroke-width="3" marker-end="url(#aX)"/>
+        <path d="M 260 170 A 90 90 0 0 0 245 105" fill="none" stroke="#a855f7" stroke-width="3" class="flow"/>
+        <text x="272" y="150" fill="#00d4ff" font-size="15" font-weight="bold">θ</text>
+        <circle cx="170" cy="170" r="6" fill="#fff"/>
+        <text x="170" y="315" fill="#8b93b8" font-size="13" text-anchor="middle" letter-spacing="3">ROTATE AROUND Z-AXIS</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 9 SCALING -->
+<section class="slide">
+  <div class="kicker"><span class="idx">09</span> TRANSFORMATION 03</div>
+  <h2>Scaling — <span class="hl2">resize</span> (briefly)</h2>
+  <ul class="points">
+    <li>Scaling multiplies each axis by a <b>factor</b>: 2× doubles size, 0.5× halves it.</li>
+    <li>Less common for robot motion — robots move rigid bodies that <i>don't change size</i>.</li>
+    <li>Where it matters: <b>simulation & digital twins</b>, camera vision, and CAD models.</li>
+    <li>Same matrix idea: just numbers on the <b>diagonal</b> of the grid.</li>
+  </ul>
+</section>
+
+<!-- 10 COMBINING -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">10</span> THE SUPERPOWER</div>
+      <h2>Combining <span class="hl">transformations</span></h2>
+      <ul class="points">
+        <li>Move <b>then</b> turn <b>then</b> move again? Just <b>multiply the matrices</b>.</li>
+        <li>One product = one final matrix describing the <i>entire motion chain</i>.</li>
+        <li>Order matters: <b>rotate → translate ≠ translate → rotate</b>.</li>
+        <li>This is why matrices beat long lists of instructions — <b>one compact result</b>.</li>
+      </ul>
+    </div>
+    <div class="viz panel" style="text-align:center;">
+      <div class="matrix" style="font-size:clamp(18px,2vw,28px);">
+        [T<sub>total</sub>] = [T₁] × [T₂] × [T₃]
+      </div>
+      <p style="color:var(--dim);margin-top:2.2vh;font-size:14px;letter-spacing:.12em;line-height:1.8;">
+        MOVE → TURN → LIFT<br>= A SINGLE FINAL MATRIX
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 REAL WORLD -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">11</span> CASE STUDY</div>
+      <h2>Real world: <span class="hl">pick & place</span></h2>
+      <ul class="points">
+        <li>Task: grab a part from a conveyor, drop it in a box.</li>
+        <li>Vision system finds the part → its position becomes a <b>coordinate frame</b>.</li>
+        <li>Controller computes the <b>transformation chain</b>: base → shoulder → elbow → wrist → gripper.</li>
+        <li>Each joint matrix multiplies into the next until the gripper <i>matches the part's frame</i>.</li>
+      </ul>
+    </div>
+    <div class="viz">
+      <svg width="380" height="320" viewBox="0 0 380 320">
+        <rect x="20" y="280" width="340" height="8" fill="rgba(0,212,255,.25)"/>
+        <rect x="40" y="250" width="50" height="30" fill="rgba(139,147,184,.35)"/>
+        <rect x="280" y="230" width="60" height="50" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="5 5"/>
+        <text x="292" y="222" fill="#a855f7" font-size="12">BOX</text>
+        <g stroke="#00d4ff" stroke-width="5" stroke-linecap="round">
+          <line x1="120" y1="280" x2="170" y2="190"/>
+          <line x1="170" y1="190" x2="230" y2="140"/>
+        </g>
+        <circle cx="120" cy="280" r="9" fill="#0a0d1f" stroke="#00d4ff" stroke-width="3"/>
+        <circle cx="170" cy="190" r="8" fill="#0a0d1f" stroke="#a855f7" stroke-width="3"/>
+        <circle class="glowdot" cx="230" cy="140" r="7" fill="#00d4ff"/>
+        <rect x="52" y="236" width="26" height="14" rx="3" fill="none" stroke="#f472b6" stroke-width="2"/>
+        <path class="flow" d="M 85 240 C 140 220, 180 180, 224 148" fill="none" stroke="#f472b6" stroke-width="2"/>
+        <text x="60" y="228" fill="#f472b6" font-size="12">PART</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 12 STEP BY STEP -->
+<section class="slide">
+  <div class="kicker"><span class="idx">12</span> WALKTHROUGH</div>
+  <h2>Step-by-step: <span class="hl2">one robot movement</span></h2>
+  <ul class="points">
+    <li><b>Step 1</b> — Locate the target: convert part position into a <b>target frame</b>.</li>
+    <li><b>Step 2</b> — Chain frames: multiply <i>base → joint1 → joint2 → … → gripper</i> matrices.</li>
+    <li><b>Step 3</b> — Solve: find joint angles so the final matrix <b>matches the target</b>.</li>
+    <li><b>Step 4</b> — Execute: motors turn, gripper lands on the part — <b>exactly where the math said</b>.</li>
+  </ul>
+</section>
+
+<!-- 13 WHY IMPORTANT -->
+<section class="slide">
+  <div class="kicker"><span class="idx">13</span> WHY IT MATTERS</div>
+  <h2>Why matrices are <span class="hl">important</span></h2>
+  <ul class="points">
+    <li><b>Universal language</b> — one framework for position, orientation, and motion.</li>
+    <li><b>Fast</b> — a single matrix multiply replaces many separate calculations.</li>
+    <li><b>Exact</b> — no guessing; repeatability of <i>fractions of a millimeter</i>.</li>
+    <li><b>Scalable</b> — the same math works for a 2-joint arm or a <b>humanoid robot</b>.</li>
+  </ul>
+</section>
+
+<!-- 14 APPLICATIONS -->
+<section class="slide">
+  <div class="kicker"><span class="idx">14</span> BEYOND THE BASICS</div>
+  <h2>Applications in <span class="hl2">robotics & automation</span></h2>
+  <ul class="points">
+    <li><b>Industrial arms</b> — welding, painting, assembly on car production lines.</li>
+    <li><b>Mobile robots</b> — SLAM: mapping rooms and tracking position with transforms.</li>
+    <li><b>Drones</b> — stabilizing flight by constantly rotating sensor frames.</li>
+    <li><b>Surgical robots</b> — precise, tremor-free instrument positioning.</li>
+    <li><b>Game engines & VR</b> — the same math renders 3D worlds in real time.</li>
+  </ul>
+</section>
+
+<!-- 15 CONCLUSION -->
+<section class="slide">
+  <div class="kicker"><span class="idx">15</span> MISSION COMPLETE</div>
+  <h2>Conclusion: <span class="hl">matrices = motion</span></h2>
+  <ul class="points">
+    <li>Robots don't "see" motion — they <b>compute</b> it, one matrix at a time.</li>
+    <li>Translation moves, rotation turns, scaling resizes — <b>one unified toolkit</b>.</li>
+    <li>Multiply the chain, and complex robot choreography becomes <i>one compact command</i>.</li>
+    <li>Master transformations, and you hold the <b>core language of modern robotics</b>.</li>
+  </ul>
+  <p class="tagline" style="margin-top:4vh;">Thank you — questions?</p>
+</section>
+
+</div>
+
+<div class="footer">
+  <span>MATRIX TRANSFORMATIONS // ROBOTICS INTERFACE v2.0</span>
+</div>
+<div class="hint">← → NAVIGATE</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let cur = 0;
+  const prog = document.getElementById('prog');
+  const counter = document.getElementById('counter');
+  function show(n){
+    slides.forEach((s,i)=>{
+      s.classList.remove('active','exit-left');
+      if(i===n) s.classList.add('active');
+      else if(i<n) s.classList.add('exit-left');
+    });
+    cur = n;
+    prog.style.width = ((n+1)/slides.length*100)+'%';
+    counter.textContent = String(n+1).padStart(2,'0')+' / '+slides.length;
+  }
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)) show(Math.min(cur+1,slides.length-1));
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) show(Math.max(cur-1,0));
+    if(e.key==='Home') show(0);
+    if(e.key==='End') show(slides.length-1);
+  });
+  document.addEventListener('click',()=> show(Math.min(cur+1,slides.length-1)));
+  let tx=null;
+  document.addEventListener('touchstart',e=>tx=e.touches[0].clientX);
+  document.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(dx<-40) show(Math.min(cur+1,slides.length-1));
+    if(dx>40) show(Math.max(cur-1,0));
+  });
+  show(0);
+</script>
+</body>
+</html>
