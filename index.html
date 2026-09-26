@@ -38,7 +38,7 @@
   }
   .slide.active{opacity:1;transform:none;pointer-events:auto;}
   .slide.exit-left{transform:translateX(-60px) scale(.98);}
-
+ 
   .kicker{
     display:inline-flex;align-items:center;gap:10px;
     font-size:clamp(11px,1.1vw,14px);letter-spacing:.35em;text-transform:uppercase;
@@ -76,7 +76,7 @@
   }
   ul.points li b{color:var(--neon-blue);font-weight:600;}
   ul.points li i{color:var(--neon-purple);font-style:normal;}
-
+ 
   .panel{
     border:1px solid var(--line);border-radius:14px;padding:3vh 2.4vw;
     background:linear-gradient(160deg,rgba(0,212,255,.06),rgba(168,85,247,.05));
@@ -86,7 +86,7 @@
   .split{display:grid;grid-template-columns:1.15fr .85fr;gap:4vw;align-items:center;}
   .viz{display:flex;align-items:center;justify-content:center;}
   svg{max-width:100%;height:auto;filter:drop-shadow(0 0 18px rgba(0,212,255,.25));}
-
+ 
   .names{display:flex;gap:1.4vw;flex-wrap:wrap;margin-top:2vh;}
   .chip{
     padding:10px 22px;border:1px solid var(--line);border-radius:999px;
@@ -95,7 +95,7 @@
     box-shadow:0 0 20px rgba(0,212,255,.12) inset;
   }
   .tagline{color:var(--dim);font-size:clamp(14px,1.4vw,20px);letter-spacing:.12em;text-transform:uppercase;}
-
+ 
   .footer{
     position:fixed;bottom:2.4vh;left:8vw;right:8vw;z-index:5;
     display:flex;align-items:center;justify-content:space-between;
@@ -106,12 +106,41 @@
     box-shadow:0 0 12px var(--neon-blue);transition:width .5s ease;}
   .counter{position:fixed;top:2.4vh;right:4vw;z-index:6;font-size:13px;letter-spacing:.3em;color:var(--neon-blue);}
   .hint{position:fixed;bottom:2.4vh;right:8vw;z-index:6;font-size:11px;letter-spacing:.2em;color:var(--dim);}
-
+ 
+  .navbtn{
+    position:fixed;z-index:20;top:50%;transform:translateY(-50%);
+    width:52px;height:52px;border-radius:50%;
+    border:1px solid var(--line);
+    background:rgba(10,13,31,.75);backdrop-filter:blur(6px);
+    color:var(--neon-blue);font-size:18px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:background .2s ease, box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+    box-shadow:0 0 18px rgba(0,212,255,.15);
+  }
+  .navbtn:hover{background:rgba(0,212,255,.15);border-color:var(--neon-blue);box-shadow:0 0 26px rgba(0,212,255,.35);}
+  .navbtn:active{transform:translateY(-50%) scale(.92);}
+  .navbtn-prev{left:2.2vw;}
+  .navbtn-next{right:2.2vw;}
+  .navbtn:disabled{opacity:.25;cursor:default;box-shadow:none;}
+  .navbtn:disabled:hover{background:rgba(10,13,31,.75);border-color:var(--line);}
+ 
+  .navbtn-fs{
+    position:fixed;top:2.4vh;right:4vw;top:auto;bottom:2.4vh;left:50%;right:auto;
+    transform:translateX(-50%);width:44px;height:44px;font-size:16px;
+    color:var(--neon-purple);
+  }
+ 
+  @media(max-width:820px){
+    .navbtn{width:44px;height:44px;font-size:15px;}
+    .navbtn-prev{left:2vw;}
+    .navbtn-next{right:2vw;}
+  }
+ 
   .matrix{font-family:'Consolas','SF Mono',monospace;font-size:clamp(16px,1.8vw,26px);line-height:1.8;
     color:var(--neon-blue);text-shadow:0 0 14px rgba(0,212,255,.5);}
   .matrix .p{color:var(--neon-purple);}
   .matrix .w{color:#fff;}
-
+ 
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
   @keyframes dash{to{stroke-dashoffset:-40}}
@@ -127,20 +156,20 @@
   .slideback{animation:slideback 2.8s ease-in-out infinite;}
   @keyframes spinslow{to{transform:rotate(360deg)}}
   .spinslow{transform-origin:center;animation:spinslow 5s linear infinite;}
-
+ 
   @media(max-width:820px){
     .split{grid-template-columns:1fr;}
     ul.points{max-width:100%;}
     .viz{display:none;}
   }
-
+ 
   html,body,.kicker,.tagline,.chip,ul.points{font-family:'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif;}
   h1.title,h2{font-family:'Playfair Display',Georgia,'Times New Roman',serif;letter-spacing:0;}
   h2{font-weight:700;}
   ul.points li{font-weight:400;letter-spacing:.01em;}
   .viz canvas{width:100%;max-width:540px;aspect-ratio:7/5;border:1px solid var(--line);border-radius:14px;
     background:linear-gradient(160deg,rgba(0,212,255,.06),rgba(168,85,247,.05));box-shadow:0 0 40px rgba(0,212,255,.08) inset,0 10px 40px rgba(0,0,0,.4);}
-
+ 
   h1.title.sm-t{font-size:clamp(30px,4.4vw,62px);margin-bottom:3.5vh;}
   .bottom{display:grid;grid-template-columns:.85fr 1.15fr;gap:3vw;align-items:end;}
   .tpanel{padding:2vh 1.6vw;}
@@ -169,18 +198,16 @@
 <div class="grid"></div>
 <div class="progress" id="prog"></div>
 <div class="counter" id="counter">01 / 15</div>
-
+ 
 <div class="deck" id="deck">
-
+ 
 <!-- 1 TITLE -->
 <section class="slide">
-  <div class="kicker"><span class="idx">SYS.BOOT</span> ACADEMIC PRESENTATION · COMPUTER GRAPHICS</div>
-  <h1 class="title sm-t">Matrix Transformation<br>in Computer Graphics</h1>
+  <h1 class="title sm-t" style="margin-top:2vh;">Matrix Transformation<br>in Computer Graphics</h1>
   <div class="bottom">
     <div>
       <p class="tagline">The math that turns numbers into pictures &amp; motion</p>
       <p class="tagline" style="color:var(--neon-blue);margin-top:1.2vh;">First Year · Robotics &amp; Automation</p>
-      <div class="pipe" style="margin-top:4vh;"><span class="a">POINT (x, y, 1)</span><span class="ar">→</span><span class="b">[ MATRIX ]</span><span class="ar">→</span><span class="c">RENDER (x′, y′, 1)</span></div>
     </div>
     <div class="panel tpanel">
       <div class="ptitle"><span>Done by</span><span>Project team</span></div>
@@ -188,7 +215,7 @@
     </div>
   </div>
 </section>
-
+ 
 <!-- 2 HOOK -->
 <section class="slide">
   <div class="split">
@@ -220,7 +247,7 @@
     </div>
   </div>
 </section>
-
+ 
 <!-- 3 PROBLEM -->
 <section class="slide">
   <div class="split">
@@ -237,7 +264,7 @@
     <div class="viz"><canvas data-a="3"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 4 COORDINATES -->
 <section class="slide">
   <div class="split">
@@ -254,7 +281,7 @@
     <div class="viz"><canvas data-a="4"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 5 WHAT IS A MATRIX -->
 <section class="slide">
   <div class="split">
@@ -272,7 +299,7 @@
     <div class="viz"><canvas data-a="5"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 6 TYPES -->
 <section class="slide">
   <div class="split">
@@ -289,7 +316,7 @@
     <div class="viz"><canvas data-a="6"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 7 TRANSLATION -->
 <section class="slide">
   <div class="split">
@@ -306,7 +333,7 @@
     <div class="viz"><canvas data-a="7"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 8 ROTATION -->
 <section class="slide">
   <div class="split">
@@ -323,7 +350,7 @@
     <div class="viz"><canvas data-a="8"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 9 SCALING -->
 <section class="slide">
   <div class="split">
@@ -340,7 +367,7 @@
     <div class="viz"><canvas data-a="9"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 10 COMBINING -->
 <section class="slide">
   <div class="split">
@@ -357,7 +384,7 @@
     <div class="viz"><canvas data-a="10"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 11 REAL WORLD -->
 <section class="slide">
   <div class="split">
@@ -374,7 +401,7 @@
     <div class="viz"><canvas data-a="11"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 12 STEP BY STEP -->
 <section class="slide">
   <div class="split">
@@ -391,7 +418,7 @@
     <div class="viz"><canvas data-a="12"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 13 WHY IMPORTANT -->
 <section class="slide">
   <div class="split">
@@ -409,7 +436,7 @@
     <div class="viz"><canvas data-a="13"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 14 APPLICATIONS -->
 <section class="slide">
   <div class="split">
@@ -428,7 +455,7 @@
     <div class="viz"><canvas data-a="14"></canvas></div>
   </div>
 </section>
-
+ 
 <!-- 15 CONCLUSION -->
 <section class="slide">
   <div class="split">
@@ -446,10 +473,32 @@
     <div class="viz"><canvas data-a="15"></canvas></div>
   </div>
 </section>
-
-<!-- 16 THANK YOU -->
+ 
+<!-- 16 WORKED EXAMPLE -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker"><span class="idx">16</span> WORKED EXAMPLE</div>
+      <h2>Numbers in action: <span class="hl">rotate + shift a triangle</span></h2>
+      <ul class="points">
+        <li>Take a triangle with corners <b>A(1, 1)</b>, <b>B(4, 1)</b>, <b>C(2, 4)</b> — plain (x, y) coordinates.</li>
+        <li>Goal: <b>rotate it 90°</b> and then <b>shift it</b> by (+3, +2). One matrix does both, in homogeneous form:</li>
+      </ul>
+      <div class="panel" style="margin-top:2vh;padding:2vh 1.6vw;display:inline-block;">
+        <div class="matrix">M&nbsp;=&nbsp;[&nbsp;0&nbsp;&minus;1&nbsp;&nbsp;3&nbsp;]<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&nbsp;1&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;2&nbsp;]<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&nbsp;0&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;1&nbsp;]</div>
+      </div>
+      <ul class="points" style="margin-top:2vh;">
+        <li>For A(1, 1, 1): <b>x′ = 0(1) &minus; 1(1) + 3 = 2</b>, <b>y′ = 1(1) + 0(1) + 2 = 3</b> → <i>A′(2, 3)</i></li>
+        <li>The <b>same matrix</b> on B and C gives <i>B′(2, 6)</i> and <i>C′(&minus;1, 4)</i> — one multiply, whole shape moved.</li>
+      </ul>
+    </div>
+    <div class="viz"><canvas data-a="16"></canvas></div>
+  </div>
+</section>
+ 
+<!-- 17 THANK YOU -->
 <section class="slide" style="align-items:center;text-align:center;">
-  <div class="kicker"><span class="idx">16</span> END OF TRANSMISSION</div>
+  <div class="kicker"><span class="idx">17</span> END OF TRANSMISSION</div>
   <h1 class="title" style="margin-bottom:1.5vh;">Thank You</h1>
   <p class="tagline">Any questions?</p>
   <div class="pipe" style="margin:3.5vh 0;"><span class="a">TRANSLATE</span><span class="ar">·</span><span class="b">ROTATE</span><span class="ar">·</span><span class="c">SCALE</span><span class="ar">=</span><span class="a">P′ = M · P</span></div>
@@ -459,19 +508,25 @@
   </div>
   <p class="tagline" style="margin-top:3vh;font-size:12px;">Matrix Transformation in Computer Graphics · First Year Robotics &amp; Automation</p>
 </section>
-
+ 
 </div>
-
+ 
 <div class="footer">
   <span>MATRIX TRANSFORMATION // GRAPHICS INTERFACE v2.0</span>
 </div>
-<div class="hint">← → NAVIGATE</div>
-
+ 
+<button id="prevBtn" class="navbtn navbtn-prev" aria-label="Previous slide">&#10094;</button>
+<button id="nextBtn" class="navbtn navbtn-next" aria-label="Next slide">&#10095;</button>
+<button id="fsBtn" class="navbtn navbtn-fs" aria-label="Toggle fullscreen">&#10021;</button>
+ 
 <script>
   const slides = [...document.querySelectorAll('.slide')];
   let cur = 0;
   const prog = document.getElementById('prog');
   const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const fsBtn = document.getElementById('fsBtn');
   function show(n){
     slides.forEach((s,i)=>{
       s.classList.remove('active','exit-left');
@@ -481,14 +536,33 @@
     cur = n;
     prog.style.width = ((n+1)/slides.length*100)+'%';
     counter.textContent = String(n+1).padStart(2,'0')+' / '+slides.length;
+    prevBtn.disabled = (n===0);
+    nextBtn.disabled = (n===slides.length-1);
   }
   document.addEventListener('keydown',e=>{
     if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)) show(Math.min(cur+1,slides.length-1));
     if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) show(Math.max(cur-1,0));
     if(e.key==='Home') show(0);
     if(e.key==='End') show(slides.length-1);
+    if(e.key==='f' || e.key==='F') toggleFullscreen();
   });
-  document.addEventListener('click',()=> show(Math.min(cur+1,slides.length-1)));
+  document.addEventListener('click',(e)=>{
+    if(e.target.closest('.navbtn')) return;
+    show(Math.min(cur+1,slides.length-1));
+  });
+  prevBtn.addEventListener('click', e=>{ e.stopPropagation(); show(Math.max(cur-1,0)); });
+  nextBtn.addEventListener('click', e=>{ e.stopPropagation(); show(Math.min(cur+1,slides.length-1)); });
+  function toggleFullscreen(){
+    if(!document.fullscreenElement){
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+  fsBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleFullscreen(); });
+  document.addEventListener('fullscreenchange', ()=>{
+    fsBtn.innerHTML = document.fullscreenElement ? '&#10022;' : '&#10021;';
+  });
   let tx=null;
   document.addEventListener('touchstart',e=>tx=e.touches[0].clientX);
   document.addEventListener('touchend',e=>{
@@ -572,13 +646,22 @@ tx('EACH ARROW = ONE MATRIX MULTIPLY',W/2,H-16,G,12,'center');tx('PIXELS SNAP TO
 for(let k=6;k>0;k--)poly(ap(F,st(Math.max(0,c-k*.012))),'rgba(0,212,255,'+(.05+.03*(6-k))+')',null,0,1.2);
 poly(ap(F,st(c)),ph==3?P:B,'rgba(0,212,255,.2)');
 tx(['01 · TRANSLATE','02 · ROTATE','03 · SCALE','M = T · R · S  →  ONE MATRIX'][ph],W/2,H-30,[B,P,K,'#fff'][ph],13,'center');
-for(let i=0;i<4;i++){X.fillStyle=ph>=i?[B,P,K,'#fff'][i]:'rgba(139,147,184,.25)';X.fillRect(50+i*80,H-16,70,4)}}
+for(let i=0;i<4;i++){X.fillStyle=ph>=i?[B,P,K,'#fff'][i]:'rgba(139,147,184,.25)';X.fillRect(50+i*80,H-16,70,4)}},
+16:t=>{O={x:56,y:H-26,u:32};
+for(let i=0;i<=8;i++)ln([i,0],[i,7],i?'rgba(0,212,255,.09)':'rgba(0,212,255,.45)',1);
+for(let j=0;j<=7;j++)ln([0,j],[8,j],j?'rgba(0,212,255,.09)':'rgba(168,85,247,.45)',1);
+const pts=[[1,1],[4,1],[2,4]],e=ease(pp(t*.3,1)),M=mul(Tr(3*e,2*e),Rot(e*PI/2));
+poly(pts,'rgba(139,147,184,.55)');const tp=ap(pts,M);poly(tp,e>.5?P:B,'rgba(0,212,255,.18)');
+['A','B','C'].forEach((n,i)=>{const q=S(pts[i]);tx(n,q[0]-12,q[1]+14,G,11)});
+['A′','B′','C′'].forEach((n,i)=>{const q=S(tp[i]);tx(n,q[0]+8,q[1]-6,e>.5?P:B,11)});
+tx('θ = '+Math.round(e*90)+'°   Δ = ('+(3*e).toFixed(1)+', '+(2*e).toFixed(1)+')',W/2,20,'#fff',12,'center',1);
+tx("A′B′C′ = M · ABC",W/2,H-8,K,12,'center',1)}
 };
 document.querySelectorAll('canvas[data-a]').forEach(c=>{c.width=W*D;c.height=H*D;c._x=c.getContext('2d')});
 const loop=t=>{const c=slides[cur].querySelector('canvas');if(c){X=c._x;X.setTransform(D,0,0,D,0,0);X.clearRect(0,0,W,H);O={x:W/2,y:H/2,u:30};A[c.dataset.a](t/1000)}requestAnimationFrame(loop)};
 requestAnimationFrame(loop);
 })();
 </script>
-
+ 
 </body>
 </html>
